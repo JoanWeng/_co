@@ -21,4 +21,13 @@ CHIP Mux8Way16 {
 
     PARTS:
     //// Replace this comment with your code.
+
+    // 先用 sel[1..0] 選擇 a,b,c,d
+    Mux4Way16(a=a, b=b, c=c, d=d, sel=sel[0..1], out=first4);
+
+    // 用 sel[1..0] 選擇 e,f,g,h
+    Mux4Way16(a=e, b=f, c=g, d=h, sel=sel[0..1], out=second4);
+
+    // 用 sel[2] 選擇前兩個結果
+    Mux16(a=first4, b=second4, sel=sel[2], out=out);
 }

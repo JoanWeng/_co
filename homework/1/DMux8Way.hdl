@@ -19,4 +19,13 @@ CHIP DMux8Way {
 
     PARTS:
     //// Replace this comment with your code.
+
+    // 第一層：用 sel[2] 分出 top (前4路) 和 bottom (後4路)
+    DMux(in=in, sel=sel[2], a=top, b=bottom);
+
+    // 第二層：用 sel[1..0] 控制前4路 (a,b,c,d)
+    DMux4Way(in=top, sel=sel[0..1], a=a, b=b, c=c, d=d);
+
+    // 第二層：用 sel[1..0] 控制後4路 (e,f,g,h)
+    DMux4Way(in=bottom, sel=sel[0..1], a=e, b=f, c=g, d=h);
 }

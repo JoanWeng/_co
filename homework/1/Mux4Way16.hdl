@@ -15,4 +15,13 @@ CHIP Mux4Way16 {
     
     PARTS:
     //// Replace this comment with your code.
+
+    // 用 sel[0] 選擇 a 或 b
+    Mux16(a=a, b=b, sel=sel[0], out=abMux);
+
+    // 用 sel[0] 選擇 c 或 d
+    Mux16(a=c, b=d, sel=sel[0], out=cdMux);
+
+    // 用 sel[1] 選擇前面兩個結果
+    Mux16(a=abMux, b=cdMux, sel=sel[1], out=out);
 }

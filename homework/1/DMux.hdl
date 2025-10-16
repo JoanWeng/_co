@@ -13,4 +13,8 @@ CHIP DMux {
 
     PARTS:
     //// Replace this comment with your code.
+    
+    Not(in=sel, out=nSel);   // nSel = ¬sel
+    And(a=in, b=nSel, out=a); // 當 sel=0，a = in
+    And(a=in, b=sel, out=b);  // 當 sel=1，b = in
 }
