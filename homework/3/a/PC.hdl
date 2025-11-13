@@ -15,4 +15,19 @@ CHIP PC {
     
     PARTS:
     //// Replace this comment with your code.
+
+    // 步驟 1: 計算 out + 1
+    Inc16(in=regout, out=incremented);
+    
+    // 步驟 2: 根據 inc 選擇 out 或 out+1
+    Mux16(a=regout, b=incremented, sel=inc, out=afterinc);
+    
+    // 步驟 3: 根據 load 選擇前一步的結果或 in
+    Mux16(a=afterinc, b=in, sel=load, out=afterload);
+    
+    // 步驟 4: 根據 reset 選擇前一步的結果或 0
+    Mux16(a=afterload, b=false, sel=reset, out=toregister);
+    
+    // 步驟 5: 儲存到暫存器 (永遠 load=true,因為總是要更新)
+    Register(in=toregister, load=true, out=regout, out=out);
 }
