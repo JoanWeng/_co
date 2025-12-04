@@ -26,4 +26,34 @@ CHIP Memory {
 
     PARTS:
 	//// Replace this comment with your code.
+
+    // 位址解碼邏輯
+    // address[14] 和 address[13] 用來決定存取哪個記憶體區域
+    // 00x xxxx xxxx xxxx = RAM (0x0000-0x3FFF)
+    // 01x xxxx xxxx xxxx = Screen (0x4000-0x5FFF)
+    // 11x xxxx xxxx xxxx = Keyboard (0x6000)
+    
+    // 使用 DMux4Way 根據最高兩位元分配 load 信號
+    DMux4Way(in=load, sel=address[13..14], a=loadRAM1, b=loadRAM2, c=loadScreen, d=loadKbd);
+    
+    // RAM 佔據前兩個區域 (address[14]=0)
+    // 所以將 loadRAM1 和 loadRAM2 合併
+    Or(a=loadRAM1, b=loadRAM2, out=loadRAM);
+    
+    // RAM16K: 處理位址 0x0000-0x3FFF
+    // 使用 address[0..13] (14 位元) 來定址 16K 記憶體
+    RAM16K(in=in, load=loadRAM, address=address[0..13], out=outRAM);
+    
+    // Screen: 處理位址 0x4000-0x5FFF
+    // 使用 address[0..12] (13 位元) 來定址 8K 螢幕記憶體
+    Screen(in=in, load=loadScreen, address=address[0..12], out=outScreen);
+    
+    // Keyboard: 處理位址 0x6000
+    // 鍵盤是唯讀的,不需要 load 信號
+    Keyboard(out=outKbd);
+    
+    // 輸出多工器 - 根據位址選擇正確的輸出
+    // 使用 address[13..14] 選擇輸出來源
+    Mux4Way16(a=outRAM, b=outRAM, c=outScreen, d=outKbd, 
+              sel=address[13..14], out=out);
 }

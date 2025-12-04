@@ -33,4 +33,109 @@ CHIP CPU {
 
     PARTS:
 	//// Replace this comment with your code.
+
+    // instruction[15] = 0 代表 A-instruction
+    // instruction[15] = 1 代表 C-instruction
+    
+    Not(in=instruction[15], out=isAInstruction);
+    Not(in=isAInstruction, out=isCInstruction);
+    
+    // C-instruction 位元欄位
+    // instruction[12] = a (A/M 選擇)
+    // instruction[11..6] = cccccc (ALU 控制)
+    // instruction[5] = d1 (寫入 A)
+    // instruction[4] = d2 (寫入 D)
+    // instruction[3] = d3 (寫入 M)
+    // instruction[2..0] = jjj (跳躍條件)
+    
+    // ============================================================
+    // A 暫存器邏輯
+    // ============================================================
+    // A 暫存器載入條件：
+    // 1. A-instruction 時 (載入指令中的值)
+    // 2. C-instruction 且 d1=1 (instruction[5]=1)
+    
+    And(a=isCInstruction, b=instruction[5], out=cInstructionToA);
+    Or(a=isAInstruction, b=cInstructionToA, out=loadA);
+    
+    // A 暫存器的輸入來源：
+    // - A-instruction: instruction 的值
+    // - C-instruction: ALU 的輸出
+    Mux16(a=instruction, b=aluOut, sel=isCInstruction, out=aRegIn);
+    
+    ARegister(in=aRegIn, load=loadA, out=aRegOut, out[0..14]=addressM);
+    
+    // ============================================================
+    // D 暫存器邏輯
+    // ============================================================
+    // D 暫存器載入條件：C-instruction 且 d2=1 (instruction[4]=1)
+    
+    And(a=isCInstruction, b=instruction[4], out=loadD);
+    DRegister(in=aluOut, load=loadD, out=dRegOut);
+    
+    // ============================================================
+    // ALU 輸入選擇
+    // ============================================================
+    // ALU 的 y 輸入根據 a 位元選擇 A 或 M
+    // instruction[12] = 0 -> 使用 A
+    // instruction[12] = 1 -> 使用 M
+    
+    Mux16(a=aRegOut, b=inM, sel=instruction[12], out=aOrM);
+    
+    // ============================================================
+    // ALU 運算
+    // ============================================================
+    // ALU 控制位元來自 instruction[11..6]
+    
+    ALU(x=dRegOut, y=aOrM,
+        zx=instruction[11],
+        nx=instruction[10],
+        zy=instruction[9],
+        ny=instruction[8],
+        f=instruction[7],
+        no=instruction[6],
+        out=aluOut, out=outM,
+        zr=aluZero,
+        ng=aluNeg);
+    
+    // ============================================================
+    // 記憶體寫入控制
+    // ============================================================
+    // writeM = C-instruction 且 d3=1 (instruction[3]=1)
+    
+    And(a=isCInstruction, b=instruction[3], out=writeM);
+    
+    // ============================================================
+    // 跳躍邏輯
+    // ============================================================
+    // 跳躍條件 (instruction[2..0] = j1 j2 j3):
+    // j1: out < 0 (negative)
+    // j2: out = 0 (zero)
+    // j3: out > 0 (positive)
+    
+    // 計算 ALU 輸出是否為正數
+    Or(a=aluZero, b=aluNeg, out=aluZeroOrNeg);
+    Not(in=aluZeroOrNeg, out=aluPos);
+    
+    // 檢查跳躍條件
+    And(a=instruction[2], b=aluNeg, out=jumpNeg);  // j1 且 out < 0
+    And(a=instruction[1], b=aluZero, out=jumpZero); // j2 且 out = 0
+    And(a=instruction[0], b=aluPos, out=jumpPos);   // j3 且 out > 0
+    
+    // 任一跳躍條件滿足
+    Or(a=jumpNeg, b=jumpZero, out=jump1);
+    Or(a=jump1, b=jumpPos, out=shouldJump);
+    
+    // 只有在 C-instruction 時才能跳躍
+    And(a=isCInstruction, b=shouldJump, out=loadPC);
+    
+    // ============================================================
+    // 程式計數器 (PC)
+    // ============================================================
+    // PC 行為：
+    // - reset=1: PC = 0
+    // - loadPC=1: PC = A (跳躍)
+    // - 其他: PC = PC + 1 (繼續執行)
+    
+    PC(in=aRegOut, load=loadPC, inc=true, reset=reset, out[0..14]=pc);
 }
