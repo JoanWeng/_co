@@ -11,10 +11,10 @@ M=0
 @SP
 M=M+1
 // push local 0
-@LCL
-D=M
 @0
-A=D+A
+D=A
+@LCL
+A=D+M
 D=M
 @SP
 A=M
@@ -22,10 +22,10 @@ M=D
 @SP
 M=M+1
 // push local 1
-@LCL
-D=M
 @1
-A=D+A
+D=A
+@LCL
+A=D+M
 D=M
 @SP
 A=M
@@ -43,10 +43,10 @@ M=D+M
 A=M-1
 M=!M
 // push argument 0
-@ARG
-D=M
 @0
-A=D+A
+D=A
+@ARG
+A=D+M
 D=M
 @SP
 A=M
@@ -60,10 +60,10 @@ D=M
 A=A-1
 M=D+M
 // push argument 1
-@ARG
-D=M
 @1
-A=D+A
+D=A
+@ARG
+A=D+M
 D=M
 @SP
 A=M
@@ -97,22 +97,30 @@ D=M+1
 @SP
 M=D
 @R13
-AM=M-1
+D=M
+@1
+A=D-A
 D=M
 @THAT
 M=D
 @R13
-AM=M-1
+D=M
+@2
+A=D-A
 D=M
 @THIS
 M=D
 @R13
-AM=M-1
+D=M
+@3
+A=D-A
 D=M
 @ARG
 M=D
 @R13
-AM=M-1
+D=M
+@4
+A=D-A
 D=M
 @LCL
 M=D
