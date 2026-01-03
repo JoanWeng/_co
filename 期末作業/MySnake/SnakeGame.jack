@@ -1,0 +1,117 @@
+class SnakeGame {
+    field Snake snake;
+    field int direction; // 1=Up, 2=Down, 3=Left, 4=Right
+    field int foodX, foodY;
+    field int score;
+    field int randomSeed; // 用於生成偽隨機數
+
+    constructor SnakeGame new() {
+        // 螢幕 512x256，格子大小 16 => 32x16 網格
+        let snake = Snake.new(10, 8, 16); 
+        let direction = 4; // 初始向右
+        let score = 0;
+        let randomSeed = 0; // 隨機種子
+        do placeFood();
+        return this;
+    }
+
+    method void dispose() {
+        do snake.dispose();
+        do Memory.deAlloc(this);
+        return;
+    }
+
+    /** 
+     * 內建的取餘數函數 (a % b)
+     * 用來解決沒有 Util.vm 的問題
+     */
+    method int mod(int a, int b) {
+        var int q;
+        let q = a / b;
+        return a - (q * b);
+    }
+
+    /** 
+     * 改進後的食物放置方法 
+     * 1. 增加運算複雜度，讓位置看起來更隨機
+     * 2. 限制生成範圍，不讓食物出現在牆壁邊緣
+     */
+    method void placeFood() {
+        var int tempMask;
+        
+        // 為了讓隨機數看起來更亂，我們乘上一個質數再取餘數
+        // Jack 的整數是 16-bit (-32768 ~ 32767)，要小心溢出變成負數
+        // 這裡我們簡單地透過多次運算來打散數字
+        
+        let randomSeed = randomSeed + 1;
+        let tempMask = (randomSeed * 13) + 7;
+        
+        // --- 設定 X 座標 ---
+        // 總寬度是 32 (0~31)。
+        // 我們限制在 1~30 之間 (避開 0 和 31)
+        // Math.abs 是確保運算結果為正數 (有些版本的 Jack OS 支援，若不支援可去掉)
+        let foodX = 1 + mod(Math.abs(tempMask), 30); 
+
+        // --- 設定 Y 座標 ---
+        // 總高度是 16 (0~15)。
+        // 我們限制在 1~14 之間 (避開 0 和 15)
+        let tempMask = (randomSeed * 17) + 11; // 用不同的係數算 Y，避免 X,Y 連動
+        let foodY = 1 + mod(Math.abs(tempMask), 14);
+        
+        // 畫出食物
+        do Screen.setColor(true);
+        // 食物畫成矩形
+        do Screen.drawRectangle(foodX*16 + 4, foodY*16 + 4, (foodX*16) + 12, (foodY*16) + 12);
+        return;
+    }
+
+    /** 主遊戲迴圈 */
+    method void run() {
+        var char key;
+        var boolean exit;
+        var boolean crashed;
+        
+        let exit = false;
+
+        while (~exit) {
+            // 記錄按鍵輸入
+            let key = Keyboard.keyPressed();
+            
+            // 處理按鍵
+            if (key = 81)  { let exit = true; } // Q 鍵退出
+            if (key = 131) { let direction = 1; } // 上
+            if (key = 133) { let direction = 2; } // 下
+            if (key = 130) { let direction = 3; } // 左
+            if (key = 132) { let direction = 4; } // 右
+
+            // 移動蛇
+            let crashed = snake.move(direction);
+
+            if (crashed) {
+                do Output.moveCursor(10, 27);
+                do Output.printString("GAME OVER");
+                do Output.moveCursor(12, 28);
+                do Output.printString("Score: ");
+                do Output.printInt(score);
+                let exit = true;
+            }
+            else {
+                // 檢查是否吃到食物
+                if ((snake.getHeadX() = foodX) & (snake.getHeadY() = foodY)) {
+                    let score = score + 1;
+                    do snake.grow();
+                    do placeFood(); // 重新生成食物
+                }
+            }
+
+            // 這是一個關鍵：利用迴圈運轉的次數來改變 randomSeed
+            // 因為人類按下按鍵的時機無法精確到毫秒，
+            // 所以經過這個迴圈累加後的 randomSeed 基本上就是隨機的
+            let randomSeed = randomSeed + 1;
+            
+            // 延遲 (數字越小蛇跑越快)
+            do Sys.wait(150);
+        }
+        return;
+    }
+}
