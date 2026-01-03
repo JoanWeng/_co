@@ -10,7 +10,7 @@
 [第六章](https://claude.ai/share/8a678e0b-9da8-4ff5-aacd-1f1fc4325002)
 [第七章&第八章](https://claude.ai/share/53ba6c35-283d-4bb2-82a0-1262751b025d)
 [第九章](https://claude.ai/share/8dea08fd-34ae-4e72-b18e-f556f3d531c6)
-[第十章&第十一章]()
+[第十章&第十一章](https://github.com/JoanWeng/_co/blob/main/%E6%9C%9F%E6%9C%AB%E4%BD%9C%E6%A5%AD/AI_Studio_Gemini%E5%B0%8D%E8%A9%B1)
 
 貪吃蛇由Gemini完成
 
